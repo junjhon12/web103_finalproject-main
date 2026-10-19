@@ -28,7 +28,7 @@ Backend: Node.js + Express, PostgreSQL, CORS + dotenv
 
 ### 1. Game Library Management
 
-Keep a personal list of games you own, are playing, completed, or want to play. Each game stores basic details such as title, platform, genre, and status.
+✅ Keep a personal list of games you own, are playing, completed, or want to play.
 
 [gif goes here]
 
