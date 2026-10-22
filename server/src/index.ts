@@ -6,7 +6,7 @@ import gamesRouter from './routes/games';
 import userGamesRouter from './routes/userGames';
 import playSessionsRouter from './routes/playSessions';
 import goalsRouter from './routes/goals';
-import usersRouter from './routes/users'; router
+import usersRouter from './routes/users';
 
 dotenv.config();
 
