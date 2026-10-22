@@ -5,6 +5,7 @@ import { query } from './db';
 import gamesRouter from './routes/games';
 import userGamesRouter from './routes/userGames'; 
 import playSessionsRouter from './routes/playSessions';
+import goalsRouter from './routes/goals';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use('/api/games', gamesRouter);
 app.use('/api/user-library', userGamesRouter); 
 app.use('/api/play-sessions', playSessionsRouter);
+app.use('/api/goals', goalsRouter);
 
 // Health Check Endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
