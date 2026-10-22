@@ -3,9 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { query } from './db';
 import gamesRouter from './routes/games';
-import userGamesRouter from './routes/userGames'; 
+import userGamesRouter from './routes/userGames';
 import playSessionsRouter from './routes/playSessions';
 import goalsRouter from './routes/goals';
+import usersRouter from './routes/users'; router
 
 dotenv.config();
 
@@ -17,8 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use('/api/users', usersRouter); 
 app.use('/api/games', gamesRouter);
-app.use('/api/user-library', userGamesRouter); 
+app.use('/api/user-library', userGamesRouter);
 app.use('/api/play-sessions', playSessionsRouter);
 app.use('/api/goals', goalsRouter);
 
