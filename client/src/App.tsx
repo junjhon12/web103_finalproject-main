@@ -5,15 +5,12 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
-
-// Placeholder component for Library
-const Library = () => <div className="p-8 text-xl">Game Library (Protected)</div>;
+import { Library } from './pages/Library';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        {/* The background color is now managed by the ProtectedRoute and individual pages */}
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
