@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserLibrary, removeGameFromLibrary, updateLibraryGame, type UserGame } from '../api/library';
+import { Link } from 'react-router-dom';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
 
@@ -22,8 +23,12 @@ export const Library: React.FC = () => {
       setIsLoading(true);
       const data = await fetchUserLibrary(user!.id);
       setGames(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load library');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to load library');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +38,8 @@ export const Library: React.FC = () => {
     try {
       await updateLibraryGame(userGameId, { status: newStatus });
       setGames((prev) => 
-        prev.map((g) => g.user_game_id === userGameId ? { ...g, status: newStatus as any } : g)
+        // Cast newStatus to the specific union type rather than 'any'
+        prev.map((g) => g.user_game_id === userGameId ? { ...g, status: newStatus as UserGame['status'] } : g)
       );
     } catch (err) {
       alert('Failed to update status');
@@ -89,8 +95,16 @@ export const Library: React.FC = () => {
           {filteredGames.map((game) => (
             <div key={game.user_game_id} className="flex flex-col p-4 bg-gray-800 rounded-lg shadow">
               <div className="flex-1">
-                <h3 className="text-lg font-bold truncate">{game.title}</h3>
-                <p className="text-sm text-gray-400">{game.platform || 'Unknown Platform'}</p>
+                  <Link 
+                    to={`/library/${game.user_game_id}`} 
+                    state={{ game }}
+                    className="hover:underline"
+                  >
+                    <h3 className="text-lg font-bold truncate text-blue-400 hover:text-blue-300">
+                      {game.title}
+                    </h3>
+                  </Link>
+                  <p className="text-sm text-gray-400">{game.platform || 'Unknown Platform'}</p>
                 <div className="mt-2">
                   <select
                     value={game.status}
