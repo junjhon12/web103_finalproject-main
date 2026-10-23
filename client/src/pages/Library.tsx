@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserLibrary, removeGameFromLibrary, updateLibraryGame, type UserGame } from '../api/library';
 import { Link } from 'react-router-dom';
+import { AddGameModal } from '../components/AddGameModal';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
 
@@ -11,6 +12,9 @@ export const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>('all');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -58,6 +62,11 @@ export const Library: React.FC = () => {
 
   const filteredGames = games.filter((game) => filter === 'all' || game.status === filter);
 
+  const handleModalSuccess = () => {
+    setIsModalOpen(false);
+    loadLibrary();
+  };
+
   if (isLoading) return <div className="text-white">Loading library...</div>;
   if (error) return <div className="text-red-400">{error}</div>;
 
@@ -65,7 +74,10 @@ export const Library: React.FC = () => {
     <div className="space-y-6 text-white">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">My Library</h1>
-        <button className="px-4 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700"
+        >
           + Add Game
         </button>
       </div>
@@ -130,6 +142,12 @@ export const Library: React.FC = () => {
           ))}
         </div>
       )}
+      {/* Render Modal */}
+      <AddGameModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={handleModalSuccess} 
+      />
     </div>
   );
 };

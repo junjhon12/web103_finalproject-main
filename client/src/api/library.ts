@@ -37,3 +37,16 @@ export const removeGameFromLibrary = async (userGameId: number): Promise<{ messa
     method: 'DELETE',
   });
 };
+
+export interface AddGamePayload {
+  user_id: number;
+  game_id: number;
+  status?: 'backlog' | 'playing' | 'completed';
+}
+
+export const addGameToLibrary = async (payload: AddGamePayload): Promise<void> => {
+  await fetchApi('/api/user-library', {
+    method: 'POST',
+    body: payload,
+  });
+};
