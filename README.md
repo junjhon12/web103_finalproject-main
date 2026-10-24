@@ -26,51 +26,44 @@ Backend: Node.js + Express, PostgreSQL, CORS + dotenv
 
 > These are the features I intend to include. Each feature will support full CRUD where applicable. GIFs and checkmarks will be added as features are completed.
 
-### 1. Game Library Management
+### ✅1. Game Library Management
 
-✅ Keep a personal list of games you own, are playing, completed, or want to play.
+ Keep a personal list of games you own, are playing, completed, or want to play.
 
 [gif goes here]
 
-### 2. Play Session Tracking
-
+### ✅ 2. Play Session Tracking
 Record when you play a game, how long the session lasted, and any notes. Users can view, create, edit, and delete play sessions.
 
 [gif goes here]
 
-### 3. Progress & Achievement Logging
-
+### ✅ 3. Progress & Achievement Logging
 Log milestones, achievements, or completion status for any game in the library. Progress entries can be linked back to the game they belong to and support create, view, update, and delete.
 
 [gif goes here]
 
-### 4. Reviews & Ratings
-
+### ✅ 4. Reviews & Ratings
 Add a personal rating and short review to any game, then browse reviews alongside the game library.
 
 [gif goes here]
 
-### 5. Backlog / Wishlist Tracking
-
+### ✅ 5. Backlog / Wishlist Tracking
 Track games you want to play, set a priority or interest level, and move games between backlog, playing, and completed statuses.
 
 [gif goes here]
 
-### 6. Stats Dashboard
-
+### ✅ 6. Stats Dashboard
 See a simple overview of gaming activity, including total games, hours played, recent sessions, completion counts, and other summaries.
 
 [gif goes here]
 
-### 7. Custom Feature: Mood / Energy-Based Game Picker
-
-Suggest a game from the user’s library based on current mood, available time, and energy level. This is intended as one of the two custom features.
+### ✅ 7. Custom Feature: Mood / Energy-Based Game Picker
+Suggest a game from the user’s library based on current mood, available time, and energy level.
 
 [gif goes here]
 
-### 8. Custom Feature: Playtime Goals & Streaks
-
-Let users set playtime goals and track streaks, such as consecutive days played or weekly hours toward a target. This is intended as the second custom feature.
+### ✅ 8. Custom Feature: Playtime Goals & Streaks
+Let users set playtime goals and track streaks, such as consecutive days played or weekly hours toward a target.
 
 [gif goes here]
 
