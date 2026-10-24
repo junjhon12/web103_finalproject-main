@@ -1,5 +1,5 @@
 import { fetchApi } from './fetcher';
-import { User } from '../context/AuthContext';
+import { type User } from '../context/AuthContext';
 
 export interface LoginCredentials {
   email: string;
