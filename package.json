@@ -3,5 +3,13 @@
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.31",
     "tailwindcss": "^4.3.3"
+  },
+  "name": "gamelog-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm install && npm run build",
+    "build:server": "cd server && npm install && npm run build",
+    "start": "cd server && NODE_ENV=production node dist/index.js"
   }
 }

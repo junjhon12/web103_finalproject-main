@@ -7,6 +7,7 @@ import userGamesRouter from './routes/userGames';
 import playSessionsRouter from './routes/playSessions';
 import goalsRouter from './routes/goals';
 import usersRouter from './routes/users';
+import path from 'path';
 
 dotenv.config();
 
@@ -23,6 +24,22 @@ app.use('/api/games', gamesRouter);
 app.use('/api/user-library', userGamesRouter);
 app.use('/api/play-sessions', playSessionsRouter);
 app.use('/api/goals', goalsRouter);
+
+// Serve static React files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientBuildPath));
+
+  // Catch-all route to serve React's index.html for unknown frontend routes
+  app.get('*', (req: Request, res: Response) => {
+    // Prevent the catch-all from swallowing missing API routes
+    if (req.path.startsWith('/api/')) {
+      res.status(404).json({ error: 'API endpoint not found' });
+      return;
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // Health Check Endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
