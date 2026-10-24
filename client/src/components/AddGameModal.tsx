@@ -15,7 +15,7 @@ export const AddGameModal: React.FC<AddGameModalProps> = ({ isOpen, onClose, onS
   const [platform, setPlatform] = useState('');
   const [genre, setGenre] = useState('');
   const [status, setStatus] = useState<'backlog' | 'playing' | 'completed'>('backlog');
-  
+  const [coverImageUrl, setCoverImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,21 +29,24 @@ export const AddGameModal: React.FC<AddGameModalProps> = ({ isOpen, onClose, onS
     setError(null);
 
     try {
-      // Step 1: Create the game in the global database
-      const newGame = await createGlobalGame({ title, platform, genre });
+      const newGame = await createGlobalGame({ 
+        title, 
+        platform, 
+        genre,
+        cover_image_url: coverImageUrl.trim() || undefined 
+      });
       
-      // Step 2: Link the game to the current user's library
       await addGameToLibrary({
         user_id: user.id,
         game_id: newGame.id,
         status,
       });
 
-      // Reset form and notify parent
       setTitle('');
       setPlatform('');
       setGenre('');
       setStatus('backlog');
+      setCoverImageUrl(''); 
       onSuccess();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -96,6 +99,15 @@ export const AddGameModal: React.FC<AddGameModalProps> = ({ isOpen, onClose, onS
                 className="w-full p-2 mt-1 text-white bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-purple-500"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300">Cover Image URL (Optional)</label>
+            <input
+              type="url"
+              value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)}
+              placeholder="https://example.com/boxart.jpg"
+              className="w-full p-2 mt-1 text-white bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-purple-500"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-300">Initial Status</label>

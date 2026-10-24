@@ -4,6 +4,7 @@ import { fetchUserLibrary, removeGameFromLibrary, updateLibraryGame, type UserGa
 import { Link } from 'react-router-dom';
 import { AddGameModal } from '../components/AddGameModal';
 import { useToast } from '../context/ToastContext';
+import { Spinner } from '../components/Spinner';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
 
@@ -14,7 +15,6 @@ export const Library: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const { showToast } = useToast();
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -45,9 +45,9 @@ export const Library: React.FC = () => {
       setGames((prev) => 
         prev.map((g) => g.user_game_id === userGameId ? { ...g, status: newStatus as UserGame['status'] } : g)
       );
-      showToast('Game status updated', 'success'); // Replaced alert
+      showToast('Game status updated', 'success');
     } catch (err) {
-      showToast('Failed to update status', 'error'); // Replaced alert
+      showToast('Failed to update status', 'error');
     }
   };
 
@@ -56,9 +56,9 @@ export const Library: React.FC = () => {
     try {
       await removeGameFromLibrary(userGameId);
       setGames((prev) => prev.filter((g) => g.user_game_id !== userGameId));
-      showToast('Game removed from library', 'success'); // Replaced alert
+      showToast('Game removed from library', 'success');
     } catch (err) {
-      showToast('Failed to remove game', 'error'); // Replaced alert
+      showToast('Failed to remove game', 'error');
     }
   };
 
@@ -69,7 +69,7 @@ export const Library: React.FC = () => {
     loadLibrary();
   };
 
-  if (isLoading) return <div className="text-white">Loading library...</div>;
+  if (isLoading) return <Spinner />;
   if (error) return <div className="text-red-400">{error}</div>;
 
   return (
@@ -107,18 +107,35 @@ export const Library: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredGames.map((game) => (
-            <div key={game.user_game_id} className="flex flex-col p-4 bg-gray-800 rounded-lg shadow">
-              <div className="flex-1">
-                  <Link 
-                    to={`/library/${game.user_game_id}`} 
-                    state={{ game }}
-                    className="hover:underline"
-                  >
-                    <h3 className="text-lg font-bold truncate text-blue-400 hover:text-blue-300">
-                      {game.title}
-                    </h3>
-                  </Link>
-                  <p className="text-sm text-gray-400">{game.platform || 'Unknown Platform'}</p>
+            <div key={game.user_game_id} className="flex flex-col overflow-hidden bg-gray-800 rounded-lg shadow-lg">
+              
+              {/* Box Art Container */}
+              <div className="relative h-48 bg-gray-900 border-b border-gray-700">
+                {game.cover_image_url ? (
+                  <img 
+                    src={game.cover_image_url} 
+                    alt={game.title} 
+                    className="object-cover w-full h-full"
+                    onError={(e) => { 
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x200/1f2937/9ca3af?text=No+Box+Art'; 
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full text-gray-500">No Box Art</div>
+                )}
+              </div>
+
+              <div className="flex flex-col flex-1 p-4">
+                <Link 
+                  to={`/library/${game.user_game_id}`} 
+                  state={{ game }}
+                  className="hover:underline"
+                >
+                  <h3 className="text-lg font-bold truncate text-blue-400 hover:text-blue-300">
+                    {game.title}
+                  </h3>
+                </Link>
+                <p className="text-sm text-gray-400">{game.platform || 'Unknown Platform'}</p>
                 <div className="mt-2">
                   <select
                     value={game.status}
@@ -130,20 +147,22 @@ export const Library: React.FC = () => {
                     <option value="completed">Completed</option>
                   </select>
                 </div>
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-sm text-yellow-400">{game.rating ? `${game.rating}/5 Stars` : 'Unrated'}</span>
+                  <button
+                    onClick={() => handleDelete(game.user_game_id)}
+                    className="text-sm text-red-400 hover:text-red-300"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-sm text-yellow-400">{game.rating ? `${game.rating}/5 Stars` : 'Unrated'}</span>
-                <button
-                  onClick={() => handleDelete(game.user_game_id)}
-                  className="text-sm text-red-400 hover:text-red-300"
-                >
-                  Remove
-                </button>
-              </div>
+
             </div>
           ))}
         </div>
       )}
+      
       {/* Render Modal */}
       <AddGameModal 
         isOpen={isModalOpen} 
