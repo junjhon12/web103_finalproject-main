@@ -7,6 +7,7 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Library } from './pages/Library';
 import { GameDetail } from './pages/GameDetail';
+import { Goals } from './pages/Goals';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/library" element={<Library />} />
             <Route path="/library/:id" element={<GameDetail />} />
+            <Route path="/goals" element={<Goals />} />
           </Route>
 
           {/* Default Redirect */}
