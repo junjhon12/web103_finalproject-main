@@ -8,28 +8,31 @@ import { Dashboard } from './pages/Dashboard';
 import { Library } from './pages/Library';
 import { GameDetail } from './pages/GameDetail';
 import { Goals } from './pages/Goals';
+import { ToastProvider } from './context/ToastContext';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/library/:id" element={<GameDetail />} />
-            <Route path="/goals" element={<Goals />} />
-          </Route>
+      <ToastProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/library/:id" element={<GameDetail />} />
+              <Route path="/goals" element={<Goals />} />
+            </Route>
 
-          {/* Default Redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+            {/* Default Redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 };

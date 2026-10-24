@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserLibrary, removeGameFromLibrary, updateLibraryGame, type UserGame } from '../api/library';
 import { Link } from 'react-router-dom';
 import { AddGameModal } from '../components/AddGameModal';
+import { useToast } from '../context/ToastContext';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
 
@@ -12,7 +13,7 @@ export const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>('all');
-
+  const { showToast } = useToast();
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -42,11 +43,11 @@ export const Library: React.FC = () => {
     try {
       await updateLibraryGame(userGameId, { status: newStatus });
       setGames((prev) => 
-        // Cast newStatus to the specific union type rather than 'any'
         prev.map((g) => g.user_game_id === userGameId ? { ...g, status: newStatus as UserGame['status'] } : g)
       );
+      showToast('Game status updated', 'success'); // Replaced alert
     } catch (err) {
-      alert('Failed to update status');
+      showToast('Failed to update status', 'error'); // Replaced alert
     }
   };
 
@@ -55,8 +56,9 @@ export const Library: React.FC = () => {
     try {
       await removeGameFromLibrary(userGameId);
       setGames((prev) => prev.filter((g) => g.user_game_id !== userGameId));
+      showToast('Game removed from library', 'success'); // Replaced alert
     } catch (err) {
-      alert('Failed to remove game');
+      showToast('Failed to remove game', 'error'); // Replaced alert
     }
   };
 
