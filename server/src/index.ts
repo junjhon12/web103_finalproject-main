@@ -1,13 +1,15 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { query } from './db';
+// Route Imports
 import gamesRouter from './routes/games';
 import userGamesRouter from './routes/userGames';
 import playSessionsRouter from './routes/playSessions';
 import goalsRouter from './routes/goals';
 import usersRouter from './routes/users';
-import path from 'path';
+import resetRouter from './routes/reset'; 
 
 dotenv.config();
 
@@ -18,28 +20,13 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/users', usersRouter); 
+// API Routes
+app.use('/api/users', usersRouter);
 app.use('/api/games', gamesRouter);
 app.use('/api/user-library', userGamesRouter);
 app.use('/api/play-sessions', playSessionsRouter);
 app.use('/api/goals', goalsRouter);
-
-// Serve static React files in production
-if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../../client/dist');
-  app.use(express.static(clientBuildPath));
-
-  // Catch-all route to serve React's index.html for unknown frontend routes
-  app.get('*', (req: Request, res: Response) => {
-    // Prevent the catch-all from swallowing missing API routes
-    if (req.path.startsWith('/api/')) {
-      res.status(404).json({ error: 'API endpoint not found' });
-      return;
-    }
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
-  });
-}
+app.use('/api/reset', resetRouter); 
 
 // Health Check Endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
@@ -54,6 +41,20 @@ app.get('/api/health', async (req: Request, res: Response) => {
     res.status(500).json({ status: 'error', message: 'Database unreachable' });
   }
 });
+
+// Serve static React files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientBuildPath));
+
+  app.get('*', (req: Request, res: Response) => {
+    if (req.path.startsWith('/api/')) {
+      res.status(404).json({ error: 'API endpoint not found' });
+      return;
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
