@@ -10,6 +10,7 @@ import playSessionsRouter from './routes/playSessions';
 import goalsRouter from './routes/goals';
 import usersRouter from './routes/users';
 import resetRouter from './routes/reset'; 
+import statsRouter from './routes/stats';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/user-library', userGamesRouter);
 app.use('/api/play-sessions', playSessionsRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/reset', resetRouter); 
+app.use('/api/stats', statsRouter);
 
 // Health Check Endpoint
 app.get('/api/health', async (req: Request, res: Response) => {
