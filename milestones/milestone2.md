@@ -10,15 +10,16 @@ This unit, be sure to complete all tasks listed below. To complete a task, place
   - [x] Include a list of pages in your app
 - [x] In `planning/entity_relationship_diagram.md`: add the entity relationship diagram you developed for your database.
   - [x] Your entity relationship diagram should include the tables in your database.
-- [ ] Prepare your three-minute pitch presentation, to be presented during Unit 7 (the next unit).
-  - [ ] You do **not** need to submit any materials in advance of your pitch.
-- [ ] In this document, complete all three questions in the **Reflection** section below
+    - [x] Include the completed ERD image and document the relationships between the tables.
+  - [x] Prepare your three-minute pitch presentation, to be presented during Unit 7 (the next unit).
+  - [x] You do **not** need to submit any materials in advance of your pitch.
+  - [x] In this document, complete all three questions in the **Reflection** section below
 
-## Reflection
+  ## Reflection
 
 ### 1. What went well during this unit?
 
-Planning
+Our planning became more concrete during this unit. We created wireframes for the Dashboard, Game Library, and Game Detail pages, which helped us define the main user flow and the information each page needs to display. We also completed the ERD image and documented the relationships between users, games, user libraries, play sessions, and goals.
 
 ### 2. What were some challenges your group faced in this unit?
 
@@ -26,4 +27,4 @@ N/A
 
 ### 3. What additional support will you need in upcoming units as you continue to work on your final project?
 
-Unsure
+None yet.
