@@ -10,6 +10,8 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 ## Wireframe 1: Dashboard / Home
 
+![Dashboard wireframe](../doc/Dashboard.png)
+
 +---------------------------------------------------------+
 |  Nav: [GameLog]   Dashboard | Library | Goals   [Profile] |
 +---------------------------------------------------------+
@@ -28,6 +30,8 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 ## Wireframe 2: Game Library
 
+![Game Library wireframe](../doc/Game-library.png)
+
 +---------------------------------------------------------+
 |  Nav: [GameLog]   Dashboard | Library | Goals   [Profile] |
 +---------------------------------------------------------+
@@ -43,6 +47,8 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 +---------------------------------------------------------+
 
 ## Wireframe 3: Game Detail View
+
+![Game Detail View wireframe](../doc/Game-detail.png)
 
 +---------------------------------------------------------+
 |  Nav: [GameLog]   Dashboard | Library | Goals   [Profile] |
