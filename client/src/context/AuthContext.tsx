@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
 
 export interface User {
   id: number;
@@ -16,18 +16,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('gamelog_token');
+  // Synchronously initialize state to prevent race conditions on refresh
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('gamelog_user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser) as User);
-    }
-  }, []);
+    return storedUser ? (JSON.parse(storedUser) as User) : null;
+  });
+  
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('gamelog_token');
+  });
 
   const login = (newToken: string, userData: User) => {
     localStorage.setItem('gamelog_token', newToken);

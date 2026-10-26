@@ -130,15 +130,25 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
     const goalText = `INSERT INTO goals (user_id, target_hours, current_streak) VALUES ($1, $2, $3)`;
     await client.query(goalText, [newUser.id, 10, 0]);
 
-    // 4. Pre-load Games into the Guest's Library
-    // Assuming IDs 1, 2, and 3 match the Zelda, Hades, and Cyberpunk seeds from your reset script
-    const preLoadText = `
-      INSERT INTO user_games (user_id, game_id, status) VALUES 
-      ($1, 1, 'playing'),
-      ($1, 2, 'completed'),
-      ($1, 3, 'backlog')
-    `;
-    await client.query(preLoadText, [newUser.id]);
+    // 4. Pre-load Games into the Guest's Library dynamically
+    const gamesResult = await client.query('SELECT id FROM games LIMIT 3');
+
+    // Only insert if games actually exist in the database
+    if (gamesResult.rows.length >= 3) {
+      const preLoadText = `
+        INSERT INTO user_games (user_id, game_id, status) VALUES 
+        ($1, $2, 'playing'),
+        ($1, $3, 'completed'),
+        ($1, $4, 'backlog')
+      `;
+      
+      await client.query(preLoadText, [
+        newUser.id, 
+        gamesResult.rows[0].id, 
+        gamesResult.rows[1].id, 
+        gamesResult.rows[2].id
+      ]);
+    }
 
     await client.query('COMMIT');
 

@@ -44,3 +44,10 @@ CREATE TABLE goals (
     target_hours INTEGER NOT NULL,
     current_streak INTEGER DEFAULT 0
 );
+
+INSERT INTO games (title, platform, genre) VALUES 
+('The Legend of Zelda: Breath of the Wild', 'Nintendo Switch', 'Action-Adventure'),
+('Hades', 'PC', 'Roguelike'),
+('Cyberpunk 2077', 'PC', 'RPG'),
+('Stardew Valley', 'Multiplatform', 'Simulation'),
+('Elden Ring', 'PS5', 'Action RPG');
