@@ -29,3 +29,9 @@ export const registerApi = async (credentials: RegisterCredentials): Promise<Use
     body: credentials,
   });
 };
+
+export const loginAsGuest = async (): Promise<AuthResponse> => {
+  return fetchApi<AuthResponse>('/api/users/guest', {
+    method: 'POST',
+  });
+};
