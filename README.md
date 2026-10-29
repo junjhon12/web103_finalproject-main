@@ -18,9 +18,10 @@ I like games, and I wanted a simple way to keep track of what I’m playing, wha
 
 ## Tech Stack
 
-Frontend: React, Tailwind CSS, Fetch API
-
-Backend: Node.js + Express, PostgreSQL, CORS + dotenv
+Frontend: React, TypeScript, Vite, Tailwind CSS (v4).
+Backend: Node.js, Express, TypeScript.
+Database: PostgreSQL (utilizing the pg driver for direct connection pooling without heavy ORMs).
+Infrastructure: Deployed to Render as a unified Web Service using Infrastructure as Code (render.yaml), serving static React files directly from the Express backend.
 
 ## Features
 
@@ -71,38 +72,7 @@ Let users set playtime goals and track streaks, such as consecutive days played 
 
 ## Installation Instructions
 
-git clone https://github.com/junjhon12/tacklelog.git
-cd tacklelog
-
-# backend
-cd server
-npm install
-
-# frontend
-cd ../client
-npm install
-
-createdb gamelog
-
-psql gamelog < server/db/schema.sql
-
-DATABASE_URL=postgres://localhost:5432/gamelog
-PORT=3001
-
-VITE_API_URL=http://localhost:3001
-
-cd server
-npm run dev
-
-# in another terminal
-curl -X POST http://localhost:3001/api/reset
-
-# Might change later so that both front and back can be launched with one command
-
-# backend
-cd server
-npm run dev
-
-# frontend
-cd client
-npm run dev
+1. Install Dependencies: Navigate into both the server and client directories and run npm install
+2. Configure Environment Variables: Create a .env file in the server directory with PORT, DATABASE_URL, and JWT_SECRET. Create a .env in the client directory with VITE_API_URL=http://localhost:3001
+3. Initialize the Database: Run npm run db:reset from the server directory (or execute psql -d gamelog -f db/schema.sql) to idempotently build the 5 core tables (users, games, user_games, play_sessions, goals)
+4. Run the Application: Start the Express development server with npm run dev in the server folder, and boot the frontend with npm run dev in the client folder
