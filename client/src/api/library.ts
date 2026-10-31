@@ -15,8 +15,8 @@ export interface UserGame {
 
 export interface UpdateLibraryPayload {
   status?: string;
-  rating?: number;
-  review?: string;
+  rating?: number | null;
+  review?: string | null;
 }
 
 export const fetchUserLibrary = async (userId: number): Promise<UserGame[]> => {

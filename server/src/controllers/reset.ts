@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
-import path from 'path';
 import { query } from '../db';
+
+const SEED_GAMES = [
+  ['The Legend of Zelda: Breath of the Wild', 'Nintendo Switch', 'Action-Adventure'],
+  ['Hades', 'PC', 'Roguelike'],
+  ['Cyberpunk 2077', 'PC', 'RPG'],
+  ['Stardew Valley', 'Multiplatform', 'Simulation'],
+  ['Elden Ring', 'PS5', 'Action RPG'],
+];
 
 export const resetDatabase = async (req: Request, res: Response): Promise<void> => {
   // Security Guard: Never allow database resets in production
@@ -11,21 +17,17 @@ export const resetDatabase = async (req: Request, res: Response): Promise<void> 
   }
 
   try {
-    // 1. Read and execute the schema file to drop and recreate tables
-    const schemaPath = path.join(__dirname, '../../db/schema.sql');
-    const schemaSql = fs.readFileSync(schemaPath, 'utf-8');
-    await query(schemaSql);
+    // TRUNCATE is atomic and resets identities, unlike re-running a schema file.
+    await query(
+      'TRUNCATE TABLE play_sessions, goals, user_games, games, users RESTART IDENTITY CASCADE'
+    );
 
-    // 2. Seed global games dictionary
-    const seedGamesSql = `
-      INSERT INTO games (title, platform, genre) VALUES 
-      ('The Legend of Zelda: Breath of the Wild', 'Nintendo Switch', 'Action-Adventure'),
-      ('Hades', 'PC', 'Roguelike'),
-      ('Cyberpunk 2077', 'PC', 'RPG'),
-      ('Stardew Valley', 'Multiplatform', 'Simulation'),
-      ('Elden Ring', 'PS5', 'Action RPG')
-    `;
-    await query(seedGamesSql);
+    for (const [title, platform, genre] of SEED_GAMES) {
+      await query(
+        'INSERT INTO games (title, platform, genre) VALUES ($1, $2, $3)',
+        [title, platform, genre]
+      );
+    }
 
     res.status(200).json({ message: 'Database reset and seeded successfully' });
   } catch (error) {

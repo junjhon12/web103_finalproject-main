@@ -73,6 +73,6 @@ Let users set playtime goals and track streaks, such as consecutive days played 
 ## Installation Instructions
 
 1. Install Dependencies: Navigate into both the server and client directories and run npm install
-2. Configure Environment Variables: Create a .env file in the server directory with PORT, DATABASE_URL, and JWT_SECRET. Create a .env in the client directory with VITE_API_URL=http://localhost:3001
-3. Initialize the Database: Run npm run db:reset from the server directory (or execute psql -d gamelog -f db/schema.sql) to idempotently build the 5 core tables (users, games, user_games, play_sessions, goals)
+2. Configure Environment Variables: Create a .env file in the server directory with PORT, DATABASE_URL, and JWT_SECRET. Create a .env in the client directory with VITE_API_URL=http://localhost:3101 (the local server port). Leave VITE_API_URL unset in production so the app uses same-origin requests.
+3. Initialize the Database: Run npm run migrate from the repository root (or npm run db:reset from the server directory) to create the 5 core tables (users, games, user_games, play_sessions, goals) and seed the game catalogue. The schema is idempotent and never drops existing data.
 4. Run the Application: Start the Express development server with npm run dev in the server folder, and boot the frontend with npm run dev in the client folder

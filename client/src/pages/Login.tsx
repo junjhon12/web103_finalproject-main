@@ -44,7 +44,8 @@ export const Login: React.FC = () => {
       showToast('Welcome to GameLog! Enjoy your guest session.', 'success');
       navigate('/dashboard');
     } catch (err) {
-      showToast('Failed to start guest session.', 'error');
+      const message = err instanceof Error ? err.message : 'Failed to start guest session.';
+      showToast(message, 'error');
       setIsLoading(false);
     }
   };

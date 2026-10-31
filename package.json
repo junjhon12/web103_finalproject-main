@@ -11,6 +11,6 @@
     "build:client": "cd client && npm install && npm run build",
     "build:server": "cd server && npm install && npm run build",
     "migrate": "cd server && node -e \"require('dotenv').config(); const fs = require('fs'); const { Client } = require('pg'); const sslConfig = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }; const client = new Client({ connectionString: process.env.DATABASE_URL, ssl: sslConfig }); client.connect().then(() => client.query(fs.readFileSync('./db/schema.sql', 'utf8'))).then(() => { console.log('Migration successful'); process.exit(0); }).catch(err => { console.error(err); process.exit(1); })\"",
-    "start": "npm run migrate && cd server && NODE_ENV=production node dist/index.js"
+    "start": "npm run migrate && cd server && node dist/index.js"
   }
 }

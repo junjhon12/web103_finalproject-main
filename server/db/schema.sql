@@ -1,10 +1,7 @@
-DROP TABLE IF EXISTS play_sessions CASCADE;
-DROP TABLE IF EXISTS goals CASCADE;
-DROP TABLE IF EXISTS user_games CASCADE;
-DROP TABLE IF EXISTS games CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- Idempotent schema: safe to run on every deploy/start.
+-- Existing rows are preserved; tables and indexes are only created when missing.
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -12,7 +9,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE games (
+CREATE TABLE IF NOT EXISTS games (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     platform VARCHAR(100),
@@ -20,7 +17,7 @@ CREATE TABLE games (
     cover_image_url TEXT
 );
 
-CREATE TABLE user_games (
+CREATE TABLE IF NOT EXISTS user_games (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     game_id INTEGER REFERENCES games(id) ON DELETE CASCADE,
@@ -30,7 +27,7 @@ CREATE TABLE user_games (
     UNIQUE(user_id, game_id)
 );
 
-CREATE TABLE play_sessions (
+CREATE TABLE IF NOT EXISTS play_sessions (
     id SERIAL PRIMARY KEY,
     user_game_id INTEGER REFERENCES user_games(id) ON DELETE CASCADE,
     duration INTEGER NOT NULL,
@@ -38,16 +35,36 @@ CREATE TABLE play_sessions (
     notes TEXT
 );
 
-CREATE TABLE goals (
+CREATE TABLE IF NOT EXISTS goals (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     target_hours INTEGER NOT NULL,
     current_streak INTEGER DEFAULT 0
 );
 
-INSERT INTO games (title, platform, genre) VALUES 
-('The Legend of Zelda: Breath of the Wild', 'Nintendo Switch', 'Action-Adventure'),
-('Hades', 'PC', 'Roguelike'),
-('Cyberpunk 2077', 'PC', 'RPG'),
-('Stardew Valley', 'Multiplatform', 'Simulation'),
-('Elden Ring', 'PS5', 'Action RPG');
+-- A user should own exactly one goal. Remove duplicate rows left by older
+-- versions before enforcing the constraint.
+DELETE FROM goals a
+USING goals b
+WHERE a.user_id = b.user_id
+  AND a.id > b.id;
+
+CREATE UNIQUE INDEX IF NOT EXISTS goals_user_id_unique ON goals(user_id);
+
+-- Helpful indexes for the ownership-scoped queries.
+CREATE INDEX IF NOT EXISTS user_games_user_id_idx ON user_games(user_id);
+CREATE INDEX IF NOT EXISTS play_sessions_user_game_id_idx ON play_sessions(user_game_id);
+
+-- Seed the global games catalogue once, without creating duplicates.
+INSERT INTO games (title, platform, genre)
+SELECT v.title, v.platform, v.genre
+FROM (VALUES
+    ('The Legend of Zelda: Breath of the Wild', 'Nintendo Switch', 'Action-Adventure'),
+    ('Hades', 'PC', 'Roguelike'),
+    ('Cyberpunk 2077', 'PC', 'RPG'),
+    ('Stardew Valley', 'Multiplatform', 'Simulation'),
+    ('Elden Ring', 'PS5', 'Action RPG')
+) AS v(title, platform, genre)
+WHERE NOT EXISTS (
+    SELECT 1 FROM games g WHERE LOWER(g.title) = LOWER(v.title)
+);
