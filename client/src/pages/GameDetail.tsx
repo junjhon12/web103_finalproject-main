@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { type UserGame, fetchUserLibrary, updateLibraryGame } from '../api/library';
@@ -22,11 +22,18 @@ export const GameDetail: React.FC = () => {
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const loadedIdRef = useRef<number | null>(null);
 
   useEffect(() => {
+    const numericId = Number(id);
+
+    // Setting `game` below re-runs this effect; avoid fetching the same data twice.
+    if (!numericId || loadedIdRef.current === numericId) return;
+    loadedIdRef.current = numericId;
+
     const loadData = async () => {
       try {
-        if (!game && user) {
+        if ((!game || game.user_game_id !== numericId) && user) {
           const library = await fetchUserLibrary(user.id);
           const foundGame = library.find((g) => g.user_game_id === Number(id));
           if (foundGame) {
@@ -55,7 +62,8 @@ export const GameDetail: React.FC = () => {
     try {
       const updated = await updateLibraryGame(Number(id), { 
         review, 
-        rating: rating === '' ? undefined : Number(rating) 
+        // Send null (not undefined) so an existing rating can be cleared.
+        rating: rating === '' ? null : Number(rating) 
       });
       setGame((prev) => prev ? { ...prev, review: updated.review, rating: updated.rating } : null);
       alert('Details updated!');
@@ -73,7 +81,7 @@ export const GameDetail: React.FC = () => {
         duration: Number(duration),
         notes: notes || undefined
       });
-      setSessions([newSession, ...sessions]); // Optimistic prepend
+      setSessions((prev) => [newSession, ...prev]); // Optimistic prepend
       setDuration('');
       setNotes('');
     } catch (err) {

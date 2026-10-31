@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { query } from '../db';
+import { AuthRequest } from '../middleware/auth';
 
 export interface DashboardStats {
   totalGames: number;
@@ -7,8 +8,13 @@ export interface DashboardStats {
   totalHoursPlayed: number;
 }
 
-export const getUserStats = async (req: Request<{ userId: string }>, res: Response): Promise<void> => {
-  const { userId } = req.params;
+export const getUserStats = async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = Number(req.params.userId);
+
+  if (!Number.isInteger(userId) || userId <= 0 || req.user?.id !== userId) {
+    res.status(403).json({ error: 'You can only view your own stats' });
+    return;
+  }
 
   try {
     // Utilize subqueries to fetch all aggregations in a single database roundtrip
@@ -20,7 +26,7 @@ export const getUserStats = async (req: Request<{ userId: string }>, res: Respon
          INNER JOIN user_games ug ON ps.user_game_id = ug.id 
          WHERE ug.user_id = $1) as total_minutes
     `;
-    
+
     const result = await query(text, [userId]);
     const row = result.rows[0];
 

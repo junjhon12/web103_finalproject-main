@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { query, getClient } from '../db';
 import crypto from 'crypto';
+import type { PoolClient } from 'pg';
+import { query, getClient } from '../db';
 
 export interface RegisterPayload {
   username: string;
@@ -15,17 +16,39 @@ export interface LoginPayload {
   password: string;
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+const GUEST_RETENTION_DAYS = 7;
+
 export const registerUser = async (req: Request<{}, {}, RegisterPayload>, res: Response): Promise<void> => {
-  const { username, email, password } = req.body;
+  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
 
   if (!username || !email || !password) {
     res.status(400).json({ error: 'Username, email, and password are required' });
     return;
   }
 
-  const client = await getClient();
+  if (username.length > 255) {
+    res.status(400).json({ error: 'Username must be 255 characters or fewer' });
+    return;
+  }
+
+  if (!EMAIL_PATTERN.test(email) || email.length > 255) {
+    res.status(400).json({ error: 'Please enter a valid email address' });
+    return;
+  }
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    return;
+  }
+
+  let client: PoolClient | undefined;
 
   try {
+    client = await getClient();
     await client.query('BEGIN'); // Start Transaction
 
     const saltRounds = 10;
@@ -45,23 +68,25 @@ export const registerUser = async (req: Request<{}, {}, RegisterPayload>, res: R
     await client.query(goalText, [newUser.id, 10, 0]); // Default 10 hours/week
 
     await client.query('COMMIT'); // Commit Transaction
-    res.status(201).json(newUser);
+    // Never return password_hash to the client.
+    res.status(201).json({ id: newUser.id, username: newUser.username });
   } catch (error: any) {
-    await client.query('ROLLBACK'); // Rollback on any failure
+    if (client) await client.query('ROLLBACK').catch(() => undefined); // Rollback on any failure
     console.error('Registration error:', error);
-    if (error.code === '23505') { 
+    if (error.code === '23505') {
       res.status(409).json({ error: 'Username or email already exists' });
       return;
     }
     res.status(500).json({ error: 'Failed to register user' });
   } finally {
-    client.release(); // Return client to the pool
+    client?.release(); // Return client to the pool
   }
 };
 
 // POST: Login user and issue JWT
 export const loginUser = async (req: Request<{}, {}, LoginPayload>, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
 
   if (!email || !password) {
     res.status(400).json({ error: 'Email and password are required' });
@@ -69,7 +94,7 @@ export const loginUser = async (req: Request<{}, {}, LoginPayload>, res: Respons
   }
 
   try {
-    const text = 'SELECT id, username, password_hash FROM users WHERE email = $1';
+    const text = 'SELECT id, username, password_hash FROM users WHERE LOWER(email) = $1';
     const result = await query(text, [email]);
 
     if (result.rowCount === 0) {
@@ -91,10 +116,10 @@ export const loginUser = async (req: Request<{}, {}, LoginPayload>, res: Respons
       { expiresIn: '24h' }
     );
 
-    res.status(200).json({ 
-      message: 'Login successful', 
-      token, 
-      user: { id: user.id, username: user.username } 
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: { id: user.id, username: user.username },
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -103,16 +128,25 @@ export const loginUser = async (req: Request<{}, {}, LoginPayload>, res: Respons
 };
 
 export const guestLogin = async (req: Request, res: Response): Promise<void> => {
-  const client = await getClient();
+  let client: PoolClient | undefined;
 
   try {
+    client = await getClient();
     await client.query('BEGIN');
+
+    // Remove abandoned guest accounts so the users table does not grow forever.
+    await client.query(
+      `DELETE FROM users
+       WHERE email LIKE '%@gamelog.local'
+         AND created_at < NOW() - ($1 || ' days')::INTERVAL`,
+      [GUEST_RETENTION_DAYS]
+    );
 
     // 1. Generate a random guest identity
     const guestId = crypto.randomBytes(4).toString('hex');
     const username = `Guest_${guestId}`;
     const email = `${username}@gamelog.local`;
-    
+
     // We hash a random password since the guest won't actually type it
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(crypto.randomBytes(8).toString('hex'), saltRounds);
@@ -131,7 +165,7 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
     await client.query(goalText, [newUser.id, 10, 0]);
 
     // 4. Pre-load Games into the Guest's Library dynamically
-    const gamesResult = await client.query('SELECT id FROM games LIMIT 3');
+    const gamesResult = await client.query('SELECT id FROM games ORDER BY id LIMIT 3');
 
     // Only insert if games actually exist in the database
     if (gamesResult.rows.length >= 3) {
@@ -141,12 +175,12 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
         ($1, $3, 'completed'),
         ($1, $4, 'backlog')
       `;
-      
+
       await client.query(preLoadText, [
-        newUser.id, 
-        gamesResult.rows[0].id, 
-        gamesResult.rows[1].id, 
-        gamesResult.rows[2].id
+        newUser.id,
+        gamesResult.rows[0].id,
+        gamesResult.rows[1].id,
+        gamesResult.rows[2].id,
       ]);
     }
 
@@ -154,17 +188,20 @@ export const guestLogin = async (req: Request, res: Response): Promise<void> => 
 
     // 5. Generate standard JWT token
     const token = jwt.sign(
-      { id: newUser.id, username: newUser.username }, 
-      process.env.JWT_SECRET || 'fallback_secret', 
+      { id: newUser.id, username: newUser.username },
+      process.env.JWT_SECRET as string,
       { expiresIn: '24h' }
     );
 
-    res.status(200).json({ token, user: newUser });
+    res.status(200).json({
+      token,
+      user: { id: newUser.id, username: newUser.username },
+    });
   } catch (error) {
-    await client.query('ROLLBACK');
+    if (client) await client.query('ROLLBACK').catch(() => undefined);
     console.error('Guest login error:', error);
     res.status(500).json({ error: 'Failed to create guest session' });
   } finally {
-    client.release();
+    client?.release();
   }
 };

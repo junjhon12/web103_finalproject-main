@@ -16,6 +16,14 @@ export interface GamePayload {
   cover_image_url?: string;
 }
 
+const cleanText = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+
+const getIdParam = (value: string): number | null => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 // GET: Retrieve all games
 export const getGames = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -27,24 +35,40 @@ export const getGames = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// POST: Create a new game
+// POST: Create a new game, reusing the existing catalogue entry when possible
 export const createGame = async (req: Request<{}, {}, GamePayload>, res: Response): Promise<void> => {
-  const { title, platform, genre, cover_image_url } = req.body;
+  const title = cleanText(req.body.title);
 
   if (!title) {
     res.status(400).json({ error: 'Title is required' });
     return;
   }
 
+  if (title.length > 255) {
+    res.status(400).json({ error: 'Title must be 255 characters or fewer' });
+    return;
+  }
+
+  const platform = cleanText(req.body.platform);
+  const genre = cleanText(req.body.genre);
+  const cover_image_url = cleanText(req.body.cover_image_url);
+
   try {
+    // Prevent the catalogue from filling up with duplicate titles.
+    const existing = await query('SELECT * FROM games WHERE LOWER(title) = LOWER($1) LIMIT 1', [title]);
+    if (existing.rowCount && existing.rowCount > 0) {
+      res.status(200).json(existing.rows[0] as Game);
+      return;
+    }
+
     const text = `
       INSERT INTO games (title, platform, genre, cover_image_url) 
       VALUES ($1, $2, $3, $4) 
       RETURNING *
     `;
-    const values = [title, platform || null, genre || null, cover_image_url || null];
+    const values = [title, platform, genre, cover_image_url];
     const result = await query(text, values);
-    
+
     res.status(201).json(result.rows[0] as Game);
   } catch (error) {
     console.error('Error creating game:', error);
@@ -54,8 +78,18 @@ export const createGame = async (req: Request<{}, {}, GamePayload>, res: Respons
 
 // PATCH: Update an existing game
 export const updateGame = async (req: Request<{ id: string }, {}, Partial<GamePayload>>, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const gameId = getIdParam(req.params.id);
   const { title, platform, genre, cover_image_url } = req.body;
+
+  if (!gameId) {
+    res.status(404).json({ error: 'Game not found' });
+    return;
+  }
+
+  if (title !== undefined && (!cleanText(title) || String(title).trim().length > 255)) {
+    res.status(400).json({ error: 'Title must be between 1 and 255 characters' });
+    return;
+  }
 
   try {
     const text = `
@@ -67,7 +101,13 @@ export const updateGame = async (req: Request<{ id: string }, {}, Partial<GamePa
       WHERE id = $5 
       RETURNING *
     `;
-    const values = [title, platform, genre, cover_image_url, id];
+    const values = [
+      title === undefined ? null : cleanText(title),
+      platform === undefined ? null : cleanText(platform),
+      genre === undefined ? null : cleanText(genre),
+      cover_image_url === undefined ? null : cleanText(cover_image_url),
+      gameId,
+    ];
     const result = await query(text, values);
 
     if (result.rowCount === 0) {
@@ -82,12 +122,25 @@ export const updateGame = async (req: Request<{ id: string }, {}, Partial<GamePa
   }
 };
 
-// DELETE: Remove a game
+// DELETE: Remove a game only when no user references it
 export const deleteGame = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const gameId = getIdParam(req.params.id);
+
+  if (!gameId) {
+    res.status(404).json({ error: 'Game not found' });
+    return;
+  }
 
   try {
-    const result = await query('DELETE FROM games WHERE id = $1 RETURNING id', [id]);
+    const inUse = await query('SELECT 1 FROM user_games WHERE game_id = $1 LIMIT 1', [gameId]);
+    if (inUse.rowCount && inUse.rowCount > 0) {
+      res.status(409).json({
+        error: 'Cannot delete a game that is in a user library. Remove it from libraries first.',
+      });
+      return;
+    }
+
+    const result = await query('DELETE FROM games WHERE id = $1 RETURNING id', [gameId]);
 
     if (result.rowCount === 0) {
       res.status(404).json({ error: 'Game not found' });
