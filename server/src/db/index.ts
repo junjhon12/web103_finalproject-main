@@ -12,14 +12,21 @@ const isLocal =
   connectionString.includes('127.0.0.1');
 
 const pool = new Pool({
-  connectionString,
-  ssl: isLocal ? undefined : { rejectUnauthorized: false },
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  database: process.env.PGDATABASE,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  console.error('Unexpected error on idle client:', err);
 });
 
-export const query = (text: string, params?: any[]) => pool.query(text, params);
+export const query = (text: string, params?: any[]) =>
+  pool.query(text, params);
+
 export const getClient = () => pool.connect();
