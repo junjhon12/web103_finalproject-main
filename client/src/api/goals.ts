@@ -1,4 +1,4 @@
-import { fetchApi } from './fetcher';
+import { ApiError, fetchApi } from './fetcher';
 
 export interface Goal {
   id: number;
@@ -21,7 +21,8 @@ export const fetchUserGoal = async (userId: number): Promise<Goal | null> => {
   try {
     return await fetchApi<Goal>(`/api/goals/user/${userId}`, { method: 'GET' });
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('404')) {
+    // The server answers 404 when the user has not created a goal yet.
+    if (error instanceof ApiError && error.status === 404) {
       return null;
     }
     throw error;
