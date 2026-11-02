@@ -29,9 +29,9 @@ Infrastructure: Deployed to Render as a unified Web Service using Infrastructure
 
 ### ✅1. Game Library Management
 
- Keep a personal list of games you own, are playing, completed, or want to play.
+Keep a personal list of games you own, are playing, completed, or want to play.
 
-[gif goes here]
+![GameLog feature preview](doc/Quick-preview.gif)
 
 ### ✅ 2. Play Session Tracking
 Record when you play a game, how long the session lasted, and any notes. Users can view, create, edit, and delete play sessions.
