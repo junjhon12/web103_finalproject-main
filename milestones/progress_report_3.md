@@ -35,3 +35,9 @@ Features checked off in README.md:
 - Stats Dashboard
 - Custom Feature: Mood / Energy-Based Game Picker
 - Custom Feature: Playtime Goals & Streaks
+
+## Submission Status
+- The project board is shared with the grading team's GitHub account, `codepathreview`.
+- The five project issues listed above are represented on the board with their current work status.
+- The Milestone 3 submission issue is closed after the required documentation and README evidence were added.
+- Milestone 3 - Unit 7 is now 100% complete.
