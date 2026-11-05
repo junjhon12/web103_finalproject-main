@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Library } from './pages/Library';
 import { GameDetail } from './pages/GameDetail';
 import { Goals } from './pages/Goals';
+import { Reviews } from './pages/Reviews';
 import { ToastProvider } from './context/ToastContext';
 
 const App: React.FC = () => {
@@ -25,6 +26,7 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/library" element={<Library />} />
               <Route path="/library/:id" element={<GameDetail />} />
+              <Route path="/reviews" element={<Reviews />} />
               <Route path="/goals" element={<Goals />} />
             </Route>
 

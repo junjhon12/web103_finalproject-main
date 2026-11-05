@@ -7,13 +7,15 @@ export interface RecentSession {
   user_game_id: number;
   title: string;
   duration: number;
-  session_date: string; // YYYY-MM-DD
+  session_date: string;
   notes: string | null;
 }
 
 export interface DashboardStats {
   totalGames: number;
   completedGames: number;
+  playingGames: number;
+  backlogGames: number;
   totalHoursPlayed: number;
   hoursThisWeek: number;
   recentSessions: RecentSession[];
@@ -40,6 +42,8 @@ export const getUserStats = async (req: AuthRequest, res: Response): Promise<voi
       SELECT 
         (SELECT COUNT(*) FROM user_games WHERE user_id = $1) as total_games,
         (SELECT COUNT(*) FROM user_games WHERE user_id = $1 AND status = 'completed') as completed_games,
+        (SELECT COUNT(*) FROM user_games WHERE user_id = $1 AND status = 'playing') as playing_games,
+        (SELECT COUNT(*) FROM user_games WHERE user_id = $1 AND status = 'backlog') as backlog_games,
         (SELECT COALESCE(SUM(ps.duration), 0) FROM play_sessions ps 
          INNER JOIN user_games ug ON ps.user_game_id = ug.id 
          WHERE ug.user_id = $1) as total_minutes,

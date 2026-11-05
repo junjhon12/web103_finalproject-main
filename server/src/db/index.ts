@@ -1,7 +1,11 @@
-import { Pool, type PoolConfig } from 'pg';
+import { Pool, types, type PoolConfig } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+// Return DATE columns (OID 1082) as plain YYYY-MM-DD strings so they never shift
+// across time zones when serialized to JSON.
+types.setTypeParser(1082, (value: string) => value);
 
 const isLocalHost = (host?: string | null): boolean =>
   !host || host === 'localhost' || host === '127.0.0.1' || host === '::1';

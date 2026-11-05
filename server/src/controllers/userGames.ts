@@ -10,20 +10,28 @@ export interface PopulatedUserGame extends Game {
   status: string;
   rating: number | null;
   review: string | null;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export interface AddGamePayload {
   game_id: number;
   status?: string;
+  priority?: string;
 }
 
 export interface UpdateLibraryPayload {
   status?: string | null;
   rating?: number | null;
   review?: string | null;
+  priority?: string;
 }
 
 const VALID_STATUSES = new Set(['backlog', 'playing', 'completed']);
+
+const VALID_PRIORITIES = new Set(['low', 'medium', 'high']);
+
+const validatePriority = (priority: unknown): priority is string =>
+  typeof priority === 'string' && VALID_PRIORITIES.has(priority);
 
 const validateStatus = (status: unknown): status is string =>
   typeof status === 'string' && VALID_STATUSES.has(status);
@@ -55,6 +63,7 @@ export const getUserLibrary = async (req: AuthRequest, res: Response): Promise<v
         ug.status, 
         ug.rating, 
         ug.review,
+        ug.priority,
         g.id AS id,
         g.title, 
         g.platform, 
@@ -77,10 +86,16 @@ export const getUserLibrary = async (req: AuthRequest, res: Response): Promise<v
 export const addGameToLibrary = async (req: AuthRequest, res: Response): Promise<void> => {
   const gameId = Number(req.body.game_id);
   const status = req.body.status === undefined ? 'backlog' : req.body.status;
+  const priority = req.body.priority === undefined ? 'medium' : req.body.priority;
   const userId = req.user?.id;
 
   if (!userId) {
     res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (!validatePriority(priority)) {
+    res.status(400).json({ error: 'Priority must be low, medium, or high' });
     return;
   }
 
@@ -97,11 +112,11 @@ export const addGameToLibrary = async (req: AuthRequest, res: Response): Promise
   try {
     // The user id always comes from the verified token, never the request body.
     const text = `
-      INSERT INTO user_games (user_id, game_id, status) 
-      VALUES ($1, $2, $3) 
+      INSERT INTO user_games (user_id, game_id, status, priority) 
+      VALUES ($1, $2, $3, $4) 
       RETURNING *
     `;
-    const result = await query(text, [userId, gameId, status]);
+    const result = await query(text, [userId, gameId, status, priority]);
 
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
@@ -122,7 +137,7 @@ export const addGameToLibrary = async (req: AuthRequest, res: Response): Promise
 export const updateLibraryGame = async (req: AuthRequest, res: Response): Promise<void> => {
   const userGameId = getIdParam(req.params.id); // user_games.id, not games.id
   const userId = req.user?.id;
-  const { status, rating, review } = req.body as UpdateLibraryPayload;
+  const { status, rating, review, priority } = req.body as UpdateLibraryPayload;
 
   if (!userGameId || !userId) {
     res.status(404).json({ error: 'Library record not found' });
@@ -144,9 +159,18 @@ export const updateLibraryGame = async (req: AuthRequest, res: Response): Promis
     return;
   }
 
+  if (priority !== undefined && !validatePriority(priority)) {
+    res.status(400).json({ error: 'Priority must be low, medium, or high' });
+    return;
+  }
+
   const fields: string[] = [];
   const values: unknown[] = [];
 
+  if (priority !== undefined) {
+    values.push(priority);
+    fields.push(`priority = $${values.length}`);
+  }
   if (status !== undefined) {
     values.push(status);
     fields.push(`status = $${values.length}`);

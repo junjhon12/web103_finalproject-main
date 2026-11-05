@@ -42,6 +42,18 @@ CREATE TABLE IF NOT EXISTS goals (
     current_streak INTEGER DEFAULT 0
 );
 
+-- Milestones and achievements logged against a game in a user's library.
+CREATE TABLE IF NOT EXISTS progress_entries (
+    id SERIAL PRIMARY KEY,
+    user_game_id INTEGER NOT NULL REFERENCES user_games(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    entry_type VARCHAR(20) NOT NULL DEFAULT 'milestone'
+        CHECK (entry_type IN ('milestone', 'achievement')),
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- A user should own exactly one goal. Remove duplicate rows left by older
 -- versions before enforcing the constraint.
 DELETE FROM goals a
@@ -51,9 +63,15 @@ WHERE a.user_id = b.user_id
 
 CREATE UNIQUE INDEX IF NOT EXISTS goals_user_id_unique ON goals(user_id);
 
+-- Wishlist/backlog priority (added after the first release, so use ALTER).
+ALTER TABLE user_games
+    ADD COLUMN IF NOT EXISTS priority VARCHAR(10) NOT NULL DEFAULT 'medium'
+    CHECK (priority IN ('low', 'medium', 'high'));
+
 -- Helpful indexes for the ownership-scoped queries.
 CREATE INDEX IF NOT EXISTS user_games_user_id_idx ON user_games(user_id);
 CREATE INDEX IF NOT EXISTS play_sessions_user_game_id_idx ON play_sessions(user_game_id);
+CREATE INDEX IF NOT EXISTS progress_entries_user_game_id_idx ON progress_entries(user_game_id);
 
 -- Seed the global games catalogue once, without creating duplicates.
 INSERT INTO games (title, platform, genre)

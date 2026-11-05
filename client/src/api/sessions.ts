@@ -33,3 +33,19 @@ export const deleteSession = async (sessionId: number): Promise<{ message: strin
     method: 'DELETE',
   });
 };
+
+export interface UpdateSessionPayload {
+  duration?: number;
+  session_date?: string;
+  notes?: string | null;
+}
+
+export const updateSession = async (
+  sessionId: number,
+  payload: UpdateSessionPayload
+): Promise<PlaySession> => {
+  return fetchApi<PlaySession>(`/api/play-sessions/${sessionId}`, {
+    method: 'PATCH',
+    body: payload,
+  });
+};
