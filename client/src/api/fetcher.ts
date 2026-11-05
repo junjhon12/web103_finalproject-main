@@ -5,6 +5,17 @@ interface FetchOptions extends RequestInit {
   body?: any;
 }
 
+/** Error thrown for non-2xx responses; keeps the HTTP status for callers. */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 const clearStoredSession = () => {
   localStorage.removeItem('gamelog_token');
   localStorage.removeItem('gamelog_user');
@@ -43,7 +54,10 @@ export const fetchApi = async <T>(endpoint: string, options: FetchOptions = {}):
     }
 
     const errorData = await response.json().catch(() => ({} as { error?: string }));
-    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    throw new ApiError(
+      errorData.error || `API request failed with status ${response.status}`,
+      response.status
+    );
   }
 
   // DELETE-style endpoints may legitimately return no content.

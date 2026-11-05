@@ -4,8 +4,8 @@ export interface RecentSession {
   id: number;
   user_game_id: number;
   title: string;
-  duration: number;
-  session_date: string;
+  duration: number; 
+  session_date: string; 
   notes: string | null;
 }
 
@@ -15,6 +15,7 @@ export interface DashboardStats {
   playingGames: number;
   backlogGames: number;
   totalHoursPlayed: number;
+  hoursThisWeek: number;
   recentSessions: RecentSession[];
 }
 

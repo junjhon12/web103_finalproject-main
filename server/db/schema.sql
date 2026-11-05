@@ -81,7 +81,17 @@ FROM (VALUES
     ('Hades', 'PC', 'Roguelike'),
     ('Cyberpunk 2077', 'PC', 'RPG'),
     ('Stardew Valley', 'Multiplatform', 'Simulation'),
-    ('Elden Ring', 'PS5', 'Action RPG')
+    ('Elden Ring', 'PS5', 'Action RPG'),
+    ('Celeste', 'PC', 'Platformer'),
+    ('Portal 2', 'PC', 'Puzzle'),
+    ('Civilization VI', 'PC', 'Turn-Based Strategy'),
+    ('Overwatch 2', 'Multiplatform', 'Competitive Shooter'),
+    ('Street Fighter 6', 'PS5', 'Fighting'),
+    ('Disco Elysium', 'PC', 'Narrative RPG'),
+    ('Return of the Obra Dinn', 'PC', 'Mystery'),
+    ('Animal Crossing: New Horizons', 'Nintendo Switch', 'Casual Simulation'),
+    ('Hollow Knight', 'Multiplatform', 'Action Platformer'),
+    ('Persona 5 Royal', 'PS5', 'Turn-Based RPG')
 ) AS v(title, platform, genre)
 WHERE NOT EXISTS (
     SELECT 1 FROM games g WHERE LOWER(g.title) = LOWER(v.title)
