@@ -5,6 +5,8 @@ export interface Goal {
   user_id: number;
   target_hours: number;
   current_streak: number;
+  longest_streak?: number; // derived from play sessions
+  weekly_hours?: number; // hours played this calendar week
 }
 
 export interface CreateGoalPayload {

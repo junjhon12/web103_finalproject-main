@@ -19,7 +19,7 @@ export const resetDatabase = async (req: Request, res: Response): Promise<void> 
   try {
     // TRUNCATE is atomic and resets identities, unlike re-running a schema file.
     await query(
-      'TRUNCATE TABLE play_sessions, goals, user_games, games, users RESTART IDENTITY CASCADE'
+      'TRUNCATE TABLE progress_entries, play_sessions, goals, user_games, games, users RESTART IDENTITY CASCADE'
     );
 
     for (const [title, platform, genre] of SEED_GAMES) {

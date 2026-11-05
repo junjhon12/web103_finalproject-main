@@ -7,6 +7,10 @@ import { useToast } from '../context/ToastContext';
 import { Spinner } from '../components/Spinner';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
+type SortBy = 'recent' | 'title' | 'priority' | 'rating';
+type Priority = UserGame['priority'];
+
+const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 export const Library: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +18,7 @@ export const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('recent');
   const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -51,6 +56,18 @@ export const Library: React.FC = () => {
     }
   };
 
+  const handlePriorityChange = async (userGameId: number, newPriority: Priority) => {
+    try {
+      await updateLibraryGame(userGameId, { priority: newPriority });
+      setGames((prev) =>
+        prev.map((g) => g.user_game_id === userGameId ? { ...g, priority: newPriority } : g)
+      );
+      showToast('Priority updated', 'success');
+    } catch (err) {
+      showToast('Failed to update priority', 'error');
+    }
+  };
+
   const handleDelete = async (userGameId: number) => {
     if (!window.confirm('Are you sure you want to remove this game from your library?')) return;
     try {
@@ -62,7 +79,20 @@ export const Library: React.FC = () => {
     }
   };
 
-  const filteredGames = games.filter((game) => filter === 'all' || game.status === filter);
+  const filteredGames = games
+    .filter((game) => filter === 'all' || game.status === filter)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'priority':
+          return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+        case 'rating':
+          return (b.rating ?? 0) - (a.rating ?? 0);
+        default:
+          return b.user_game_id - a.user_game_id; // most recently added first
+      }
+    });
 
   const handleModalSuccess = () => {
     setIsModalOpen(false);
@@ -84,8 +114,8 @@ export const Library: React.FC = () => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex space-x-2">
+      {/* Filters & sorting */}
+      <div className="flex flex-wrap items-center gap-2">
         {['all', 'backlog', 'playing', 'completed'].map((status) => (
           <button
             key={status}
@@ -97,6 +127,19 @@ export const Library: React.FC = () => {
             {status}
           </button>
         ))}
+        <label className="ml-auto text-sm text-gray-400">
+          Sort by{' '}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="p-2 ml-1 text-white bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-purple-500"
+          >
+            <option value="recent">Recently added</option>
+            <option value="title">Title (A-Z)</option>
+            <option value="priority">Priority</option>
+            <option value="rating">Rating</option>
+          </select>
+        </label>
       </div>
 
       {/* Grid */}
@@ -147,6 +190,20 @@ export const Library: React.FC = () => {
                     <option value="completed">Completed</option>
                   </select>
                 </div>
+                {game.status === 'backlog' && (
+                  <label className="block mt-2 text-xs text-gray-400">
+                    Priority
+                    <select
+                      value={game.priority}
+                      onChange={(e) => handlePriorityChange(game.user_game_id, e.target.value as Priority)}
+                      className="w-full p-1 mt-1 text-sm text-white bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </label>
+                )}
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-sm text-yellow-400">{game.rating ? `${game.rating}/5 Stars` : 'Unrated'}</span>
                   <button

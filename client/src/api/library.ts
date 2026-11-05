@@ -6,6 +6,7 @@ export interface UserGame {
   status: 'backlog' | 'playing' | 'completed';
   rating: number | null;
   review: string | null;
+  priority: 'low' | 'medium' | 'high';
   id: number; // Global game ID
   title: string;
   platform: string | null;
@@ -17,6 +18,7 @@ export interface UpdateLibraryPayload {
   status?: string;
   rating?: number | null;
   review?: string | null;
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export const fetchUserLibrary = async (userId: number): Promise<UserGame[]> => {

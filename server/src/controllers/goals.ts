@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { query } from '../db';
 import { AuthRequest } from '../middleware/auth';
+import { getPlaytimeSummary } from '../utils/playtime';
 
 export interface Goal {
   id: number;
@@ -42,7 +43,18 @@ export const getUserGoal = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    res.status(200).json(result.rows[0] as Goal);
+    // Streaks are derived from logged play sessions, so refresh them on read.
+    const summary = await getPlaytimeSummary(userId);
+    const refreshed = await query(
+      'UPDATE goals SET current_streak = $1 WHERE user_id = $2 RETURNING *',
+      [summary.currentStreak, userId]
+    );
+
+    res.status(200).json({
+      ...(refreshed.rows[0] as Goal),
+      longest_streak: summary.longestStreak,
+      weekly_hours: summary.weeklyHours,
+    });
   } catch (error) {
     console.error('Error fetching goal:', error);
     res.status(500).json({ error: 'Failed to fetch goal' });

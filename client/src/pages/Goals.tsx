@@ -42,12 +42,13 @@ export const Goals: React.FC = () => {
       if (goal) {
         // Update existing goal
         const updatedGoal = await updateGoal(goal.id, { target_hours: Number(targetHours) });
-        setGoal(updatedGoal);
+        // PATCH returns the raw row, so keep the derived stats we already loaded.
+        setGoal((prev) => ({ ...prev, ...updatedGoal }));
         setSuccessMsg('Goal updated successfully!');
       } else {
         // Create new goal
         const newGoal = await createGoal({ user_id: user.id, target_hours: Number(targetHours) });
-        setGoal(newGoal);
+        setGoal((prev) => ({ ...prev, ...newGoal }));
         setSuccessMsg('Goal created successfully!');
       }
     } catch (err: unknown) {
@@ -59,13 +60,17 @@ export const Goals: React.FC = () => {
 
   if (isLoading) return <div className="text-white">Loading goals...</div>;
 
+  const weeklyHours = goal?.weekly_hours ?? 0;
+  const progressPct = goal ? Math.min(100, Math.round((weeklyHours / goal.target_hours) * 100)) : 0;
+  const goalReached = !!goal && weeklyHours >= goal.target_hours;
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 text-white">
       <h1 className="text-3xl font-bold">Playtime Goals & Streaks</h1>
       
       <section className="p-6 bg-gray-800 rounded-lg shadow">
         <h2 className="mb-4 text-xl font-semibold">Current Progress</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="p-4 bg-gray-700 rounded border-l-4 border-purple-500">
             <p className="text-sm text-gray-400">Weekly Target</p>
             <p className="text-3xl font-bold">{goal ? `${goal.target_hours} Hours` : 'Not Set'}</p>
@@ -74,7 +79,28 @@ export const Goals: React.FC = () => {
             <p className="text-sm text-gray-400">Active Streak</p>
             <p className="text-3xl font-bold text-green-400">{goal?.current_streak || 0} Days</p>
           </div>
+          <div className="p-4 bg-gray-700 rounded border-l-4 border-yellow-500">
+            <p className="text-sm text-gray-400">Longest Streak</p>
+            <p className="text-3xl font-bold text-yellow-400">{goal?.longest_streak || 0} Days</p>
+          </div>
         </div>
+
+        {goal && (
+          <div className="mt-6">
+            <div className="flex justify-between mb-1 text-sm text-gray-300">
+              <span>This week: {weeklyHours}h of {goal.target_hours}h</span>
+              <span>{progressPct}%</span>
+            </div>
+            <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden" role="progressbar"
+                 aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100}>
+              <div
+                className={`h-full rounded-full ${goalReached ? 'bg-green-500' : 'bg-purple-500'}`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            {goalReached && <p className="mt-2 text-sm text-green-400">Weekly goal reached. Nice work!</p>}
+          </div>
+        )}
       </section>
 
       <section className="p-6 bg-gray-800 rounded-lg shadow">

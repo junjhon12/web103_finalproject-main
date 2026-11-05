@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { type UserGame, fetchUserLibrary, updateLibraryGame } from '../api/library';
-import { type PlaySession, fetchGameSessions, logSession, deleteSession } from '../api/sessions';
+import { ProgressTracker } from '../components/ProgressTracker';
+import { type PlaySession, fetchGameSessions, logSession, updateSession, deleteSession } from '../api/sessions';
 
 export const GameDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,12 @@ export const GameDetail: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loadedIdRef = useRef<number | null>(null);
+
+  // Inline session editing state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDuration, setEditDuration] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   useEffect(() => {
     const numericId = Number(id);
@@ -91,6 +98,32 @@ export const GameDetail: React.FC = () => {
     }
   };
 
+  const startEditing = (session: PlaySession) => {
+    setEditingId(session.id);
+    setEditDuration(String(session.duration));
+    setEditDate(session.session_date.slice(0, 10));
+    setEditNotes(session.notes || '');
+  };
+
+  const handleSaveSession = async (sessionId: number) => {
+    const minutes = Number(editDuration);
+    if (!Number.isInteger(minutes) || minutes <= 0) {
+      alert('Duration must be a whole number of minutes');
+      return;
+    }
+    try {
+      const updated = await updateSession(sessionId, {
+        duration: minutes,
+        session_date: editDate,
+        notes: editNotes.trim() || null,
+      });
+      setSessions((prev) => prev.map((s) => (s.id === sessionId ? updated : s)));
+      setEditingId(null);
+    } catch (err) {
+      alert('Failed to update session');
+    }
+  };
+
   const handleDeleteSession = async (sessionId: number) => {
     if (!window.confirm('Delete this session?')) return;
     try {
@@ -144,6 +177,9 @@ export const GameDetail: React.FC = () => {
         </div>
       </section>
 
+      {/* Progress & Achievements Section */}
+      <ProgressTracker userGameId={game.user_game_id} />
+
       {/* Play Sessions Section */}
       <section className="p-6 bg-gray-800 rounded-lg shadow">
         <h2 className="mb-4 text-2xl font-bold">Play Sessions</h2>
@@ -185,23 +221,50 @@ export const GameDetail: React.FC = () => {
           {sessions.length === 0 ? (
             <p className="text-gray-400">No play sessions logged yet.</p>
           ) : (
-            sessions.map((session) => (
-              <div key={session.id} className="flex items-center justify-between p-3 bg-gray-700 rounded">
-                <div>
-                  <span className="font-bold text-blue-400">{session.duration} mins</span>
-                  <span className="ml-2 text-sm text-gray-400">
-                    ({new Date(session.session_date).toLocaleDateString()})
-                  </span>
-                  {session.notes && <p className="mt-1 text-sm text-gray-300">{session.notes}</p>}
+            sessions.map((session) =>
+              editingId === session.id ? (
+                <div key={session.id} className="p-3 space-y-2 bg-gray-700 rounded">
+                  <div className="flex flex-col gap-2 md:flex-row">
+                    <input
+                      type="number" min="1" value={editDuration}
+                      onChange={(e) => setEditDuration(e.target.value)}
+                      aria-label="Duration in minutes"
+                      className="w-full p-2 text-white bg-gray-600 rounded md:w-28"
+                    />
+                    <input
+                      type="date" value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      aria-label="Session date"
+                      className="w-full p-2 text-white bg-gray-600 rounded md:w-44"
+                    />
+                    <input
+                      type="text" value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      aria-label="Notes" placeholder="Notes"
+                      className="flex-1 p-2 text-white bg-gray-600 rounded"
+                    />
+                  </div>
+                  <div className="flex gap-3 text-sm">
+                    <button onClick={() => handleSaveSession(session.id)} className="text-green-400 hover:text-green-300">Save</button>
+                    <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-300">Cancel</button>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => handleDeleteSession(session.id)}
-                  className="text-sm text-red-400 hover:text-red-300"
-                >
-                  Delete
-                </button>
-              </div>
-            ))
+              ) : (
+                <div key={session.id} className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                  <div>
+                    <span className="font-bold text-blue-400">{session.duration} mins</span>
+                    <span className="ml-2 text-sm text-gray-400">
+                      ({new Date(`${session.session_date.slice(0, 10)}T00:00:00`).toLocaleDateString()})
+                    </span>
+                    {session.notes && <p className="mt-1 text-sm text-gray-300">{session.notes}</p>}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => startEditing(session)} className="text-sm text-blue-400 hover:text-blue-300">Edit</button>
+                    <button onClick={() => handleDeleteSession(session.id)} className="text-sm text-red-400 hover:text-red-300">Delete</button>
+                  </div>
+                </div>
+              )
+            )
           )}
         </div>
       </section>
