@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { AddGameModal } from '../components/AddGameModal';
 import { useToast } from '../context/ToastContext';
 import { Spinner } from '../components/Spinner';
+import GameSearch from '../components/GameSearch';
+// import { fetchGlobalGames, type Game } from '../api/games';
 
 type FilterStatus = 'all' | 'backlog' | 'playing' | 'completed';
 type SortBy = 'recent' | 'title' | 'priority' | 'rating';
@@ -15,6 +17,7 @@ const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 export const Library: React.FC = () => {
   const { user } = useAuth();
   const [games, setGames] = useState<UserGame[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>('all');
@@ -79,9 +82,13 @@ export const Library: React.FC = () => {
     }
   };
 
-  const filteredGames = games
-    .filter((game) => filter === 'all' || game.status === filter)
-    .sort((a, b) => {
+const filteredGames = games.filter((game) => {
+  const matchesStatus = filter === 'all' || game.status === filter;
+
+  const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+  return matchesStatus && matchesSearch;
+  }).sort((a, b) => {
       switch (sortBy) {
         case 'title':
           return a.title.localeCompare(b.title);
@@ -98,6 +105,25 @@ export const Library: React.FC = () => {
     setIsModalOpen(false);
     loadLibrary();
   };
+
+  const handleSearch = (searchTerm: string) => {
+    setSearchTerm(searchTerm.trim());
+  }
+
+  // const handleGlobalSearch = async (searchTerm: string) => {
+  //   try{
+  //     setIsSearching(true);
+  //     const results = await fetchGlobalGames(searchTerm);
+  //     setGlobalGames(results);
+  //     setHasSearched(true);
+  //   }
+  //   catch(error){
+  //     showToast('Failed to search games', 'error');
+  //   }
+  //   finally{
+  //     setIsSearching(false);
+  //   }
+  // }
 
   if (isLoading) return <Spinner />;
   if (error) return <div className="text-red-400">{error}</div>;
@@ -127,6 +153,15 @@ export const Library: React.FC = () => {
             {status}
           </button>
         ))}
+
+        <label className="ml-auto text-sm text-gray-400">
+        <h2 className="mb-3 text-lg font-bold">
+          Search My Library
+        </h2>
+
+        <GameSearch onSearch={handleSearch} />
+        </label>
+
         <label className="ml-auto text-sm text-gray-400">
           Sort by{' '}
           <select

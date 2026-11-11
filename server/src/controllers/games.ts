@@ -23,13 +23,16 @@ const getIdParam = (value: string): number | null => {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
-
 // GET: Retrieve all games
 export const getGames = async (req: Request, res: Response): Promise<void> => {
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
   try {
-    const result = await query('SELECT * FROM games ORDER BY id DESC');
+    const result = await query(`SELECT * FROM games WHERE title ILIKE $1 ORDER BY id DESC`,
+      [`%${search}%`]
+    );
     res.status(200).json(result.rows as Game[]);
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching games:', error);
     res.status(500).json({ error: 'Failed to fetch games' });
   }

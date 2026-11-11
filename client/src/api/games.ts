@@ -21,3 +21,7 @@ export const createGlobalGame = async (payload: CreateGamePayload): Promise<Game
     body: payload,
   });
 };
+
+export const fetchGlobalGames = async (searchTerm: string = ''): Promise<Game[]> => {
+  return fetchApi<Game[]>(`/api/games?search=${encodeURIComponent(searchTerm)}`);
+}
