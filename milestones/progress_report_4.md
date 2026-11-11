@@ -2,15 +2,20 @@
 
 ## Milestone 4 Completion
 
-Replace the blank before the percent sign with a number from 0 to 100.
-Completion percentage for Milestone 4 - Unit 8: %
-List each issue you completed this unit and the main file or folder where that work lives, one per line:
+Completion percentage for Milestone 4 - Unit 8: 100%
 
-- Example: User login - server/routes/auth.js
--
+- Issue #8: Implement GET /api/games RESTful endpoint - `server/src/controllers/games.ts`, `server/src/routes/games.ts`
+- Implement live search for the user's personal game library - `client/src/components/GameSearch.tsx`, `client/src/pages/Library.tsx`
+- Complete remaining GameLog features, including progress tracking, reviews, and playtime goals - `client/src/pages/`, `server/src/controllers/`
+- Update Milestone 4 documentation and reflection - `milestones/milestone4.md`
 
 ## Features Completed This Unit
 
-List each feature you completed and checked off in readme.md this unit, one per line:
-
-- Example: Search events by category
+- Game Library Management
+- Play Session Tracking
+- Progress & Achievement Logging
+- Reviews & Ratings
+- Backlog / Wishlist Tracking
+- Stats Dashboard
+- Custom Feature: Mood / Energy-Based Game Picker
+- Custom Feature: Playtime Goals & Streaks
