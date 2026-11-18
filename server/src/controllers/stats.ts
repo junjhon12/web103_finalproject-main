@@ -73,6 +73,8 @@ export const getUserStats = async (req: AuthRequest, res: Response): Promise<voi
     const stats: DashboardStats = {
       totalGames: parseInt(row.total_games, 10),
       completedGames: parseInt(row.completed_games, 10),
+      playingGames: parseInt(row.playing_games, 10),
+      backlogGames: parseInt(row.backlog_games, 10),
       totalHoursPlayed: minutesToHours(row.total_minutes),
       hoursThisWeek: minutesToHours(row.week_minutes),
       recentSessions: recentResult.rows as RecentSession[],

@@ -19,6 +19,8 @@ const pluralize = (count: number, singular: string, plural: string): string =>
 export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, currentStreak }) => {
   const cards: StatCard[] = [
     { label: 'Total Games', value: String(stats.totalGames), accentClass: 'text-white' },
+    { label: 'Backlog Games', value: String(stats.backlogGames), accentClass: 'text-orange-400' },
+    { label: 'Playing Games', value: String(stats.playingGames), accentClass: 'text-purple-400' },
     { label: 'Completed Games', value: String(stats.completedGames), accentClass: 'text-blue-400' },
     { label: 'Hours Played', value: `${stats.totalHoursPlayed}h`, accentClass: 'text-yellow-400' },
     {
@@ -33,7 +35,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, currentSt
       <h2 id="dashboard-stats-heading" className="mb-4 text-xl font-semibold">
         Stats Overview
       </h2>
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <div key={card.label} className="p-4 bg-gray-700 rounded min-w-0">
             <dt className="text-sm text-gray-300">{card.label}</dt>
