@@ -4,7 +4,7 @@ CodePath WEB103 Final Project
 
 Designed and developed by: Quoc Bao Le, Phuong Nguyen, Muhib Sheikh, Siyam Seid
 
-🔗 Link to deployed app:
+🔗 Link to deployed app: [GameLog](https://gamelog-hq6d.onrender.com)
 
 ## About
 
